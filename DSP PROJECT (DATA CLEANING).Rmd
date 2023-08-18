@@ -1,0 +1,129 @@
+---
+title: "DSP PROJECT (DATA CLEANING)"
+output: html_notebook
+---
+
+```{r}
+#v = version 
+#v1 = delete some columns
+#v2 = change date format
+#v3 = sort by date
+#v4 = filter certain date (2/9/2017 - 30/5/2023)
+#v5 = filter the ASEAN country only (Cambodia, Laos, Malaysia, Myanmar, Philippines, Thailand, Singapore)
+#v6 = delete the missing value in the "main_cuisine" column
+```
+
+
+
+```{r}
+# import data
+
+#file.choose()    # to find file location
+rdata <- read.csv("D:\\UMP\\Sem 4 2022-23\\BSD2223 Data Sc Programming II\\Project\\Dataset\\FoodPanda Restaurants.csv", header=TRUE)
+rdata
+```
+
+
+
+```{r}
+# v1: delete column budget & post_code because: 
+# budget & post_code = MEANINGLESS to data analysis 
+# minimum_order_amount & review_with_comment_number are SAME VALUE
+# is_active & is_promoted ONLY have OPTION option
+
+v1 <- subset(rdata, select = -c(budget, minimum_order_amount, post_code, review_with_comment_number, is_active, is_promoted))
+v1
+```
+
+
+
+```{r}
+# v2: change date format
+
+#install.packages("lubridate")
+library(lubridate)
+library(dplyr)
+
+# Define the input date string
+date_string <- v1$is_new_until
+
+# Parse the date string into a POSIXct object
+date <- ymd_hms(date_string)
+
+# Format the date as "dd-mm-yyyy hh:mm:ss"
+v1$is_new_until <- format(date, format = "%d-%m-%Y")
+
+# Print the formatted date
+v2 <- v1
+v2
+```
+
+
+
+```{r}
+# v3: sort by date
+
+# Convert the 'is_new_until' column to a date format
+v2$is_new_until <- as.Date(v2$is_new_until, format = "%d-%m-%Y")
+
+# Sort the data by date
+sorted_data <- v2 %>% arrange(is_new_until)
+
+# View the sorted data
+v3 <- sorted_data
+v3
+```
+
+
+
+```{r}
+# v4: filter certain date (01/01/2013 - 31/5/2023)
+# because the date start from 0001-01-01
+
+# Convert the 'is_new_until' column to a date format
+v3$is_new_until <- as.Date(v3$is_new_until)
+
+
+# Filter the data based on the date range
+v4 <- v3 %>% filter(is_new_until >= as.Date("2013-01-01") & is_new_until <= as.Date("2023-05-31"))
+v4
+```
+
+
+
+```{r}
+# v5: filter the ASEAN country only (Cambodia, Laos, Malaysia, Myanmar, Philippines, Thailand, Singapore) because aim to focus on ASEAN country only
+
+library(dplyr)
+
+v5 <- filter(v4, country %in% c("Cambodia", "Laos", "Malaysia", "Myanmar", "Philippines", "Thailand", "Singapore"))
+v5
+```
+
+
+
+```{r}
+# v6: delete the missing value in the "main_cuisine" column because those values can't simply replace with other terms
+
+missing_rows <- is.na(v5$main_cuisine) | v5$main_cuisine == ""
+
+v6 <- v5[!missing_rows, ]
+v6
+```
+
+
+
+```{r}
+# v7: filter the minimum_delivery_time <= 1000 because non logic to the analysis
+
+v7 <- v6[v6$minimum_delivery_time <= 1000, ]
+v7
+```
+
+
+
+```{r}
+# save the file as csv
+
+write.csv(v7, "D:\\UMP\\Sem 4 2022-23\\BSD2223 Data Sc Programming II\\Project\\Dataset\\data.csv", row.names=FALSE)
+```
